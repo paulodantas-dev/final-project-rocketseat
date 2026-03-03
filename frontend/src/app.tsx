@@ -18,7 +18,7 @@ const isAuthenticated = true;
 
 function RootLayout() {
   return (
-    <div className="min-h-screen w-full max-w-screen">
+    <div className="min-h-dvh w-full max-w-screen">
       <Outlet />
     </div>
   );
@@ -26,7 +26,7 @@ function RootLayout() {
 
 function AuthenticatedLayout() {
   return (
-    <div className="min-h-screen w-full max-w-screen">
+    <div className="h-dvh w-full max-w-screen">
       <Header />
       <Outlet />
     </div>
