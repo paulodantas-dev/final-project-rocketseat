@@ -14,7 +14,9 @@ import { ProfilePage } from "./pages/profile";
 import { RegisterPage } from "./pages/register";
 import { TransactionsPage } from "./pages/transactions";
 
-const isAuthenticated = true;
+const isAuthenticated = () => {
+  return !!localStorage.getItem("token");
+};
 
 function RootLayout() {
   return (
@@ -34,7 +36,7 @@ function AuthenticatedLayout() {
 }
 
 const requireAuth = () => {
-  if (!isAuthenticated) {
+  if (!isAuthenticated()) {
     throw redirect({ to: "/login" });
   }
 };
@@ -59,12 +61,22 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
+  beforeLoad: () => {
+    if (isAuthenticated()) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: LoginPage,
 });
 
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/register",
+  beforeLoad: () => {
+    if (isAuthenticated()) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: RegisterPage,
 });
 

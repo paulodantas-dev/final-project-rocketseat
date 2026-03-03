@@ -2,15 +2,37 @@ import { InputLabel } from "@/components/input-label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Link } from "@tanstack/react-router";
+import { useLogin } from "@/hooks/use-auth";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, Mail, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const login = useLogin();
+  const navigate = useNavigate();
 
   const handleTogglePassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handleLogin = async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const form = e.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      await login.mutateAsync({
+        email: email,
+        password: password,
+      });
+      navigate({ to: "/" });
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -25,7 +47,7 @@ export function LoginPage() {
             Entre na sua conta para continuar
           </span>
         </div>
-        <div className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleLogin}>
           <InputLabel.Root>
             <InputLabel.Label
               htmlFor="email"
@@ -36,6 +58,7 @@ export function LoginPage() {
             <InputLabel.Field
               id="email"
               type="email"
+              name="email"
               placeholder="mail@exemplo.com"
               startIcon={<Mail size={16} />}
             />
@@ -50,6 +73,7 @@ export function LoginPage() {
             <InputLabel.Field
               id="password"
               type={showPassword ? "text" : "password"}
+              name="password"
               placeholder="Digite sua senha"
               startIcon={<Lock size={16} />}
               endIcon={showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -61,7 +85,7 @@ export function LoginPage() {
           </InputLabel.Root>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
+              <Checkbox id="remember" name="remember" />
               <Label
                 htmlFor="remember"
                 className="text-sm font-normal text-gray-700 cursor-pointer"
@@ -101,7 +125,7 @@ export function LoginPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
