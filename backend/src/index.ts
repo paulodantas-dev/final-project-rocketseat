@@ -1,29 +1,43 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import dotenv from "dotenv";
-import { typeDefs } from "./schema/typeDefs";
-import { resolvers } from "./resolvers";
-import { createContext } from "./context";
+import { prisma } from "./lib/prisma";
 
-// Load environment variables
-dotenv.config();
+const typeDefs = `#graphql
+  scalar DateTime
 
-const startServer = async () => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-  });
+  type Category {
+    id: ID!
+    title: String!
+    description: String
+    color: String!
+    icon: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
 
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: Number(process.env.PORT) || 4000 },
-    context: createContext,
-  });
 
-  console.log(`🚀 Server ready at: ${url}`);
-  console.log(`📊 GraphQL Playground available at: ${url}`);
+  type Query {
+    categories: [Category]
+  }
+`;
+
+const resolvers = {
+  Query: {
+    categories: async () => {
+      return prisma.category.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+    },
+  },
 };
 
-startServer().catch((error) => {
-  console.error("Error starting server:", error);
-  process.exit(1);
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
 });
+
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 3333 },
+});
+
+console.log(`🚀  Server ready at: ${url}`);
