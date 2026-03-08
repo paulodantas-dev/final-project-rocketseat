@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CreateCategoryModal } from "@/components/create-category-modal";
-import { CategoriesHeader } from "@/components/categories-header";
+import { FinancyHeader } from "@/components/financy-header";
+import { CategoriesList } from "@/components/categories-list";
 import { CategoriesStats } from "@/components/categories-stats";
 
 export function CategoriesPage() {
@@ -9,8 +10,14 @@ export function CategoriesPage() {
   return (
     <div className="h-full bg-gray-100">
       <div className="container mx-auto p-6 flex flex-col gap-8">
-        <CategoriesHeader onAddCategory={() => setIsCreateModalOpen(true)} />
+        <FinancyHeader
+          title="Categorias"
+          description="Organize suas transações por categorias"
+          onAdd={() => setIsCreateModalOpen(true)}
+          buttonText="Nova categoria"
+        />
         <CategoriesStats />
+        <CategoriesList />
         <CreateCategoryModal
           open={isCreateModalOpen}
           onOpenChange={setIsCreateModalOpen}

@@ -42,8 +42,23 @@ interface DeleteCategoryArgs {
   id: string;
 }
 
+type TransactionKind = "INCOME" | "EXPENSE";
+
+interface CreateTransactionArgs {
+  description: string;
+  amount: number;
+  type: TransactionKind;
+  date: string;
+  categoryId: string;
+}
+
 interface CategoryParent {
   userId: string;
+}
+
+interface TransactionParent {
+  userId: string;
+  categoryId: string;
 }
 
 const typeDefs = `#graphql
@@ -73,8 +88,26 @@ const typeDefs = `#graphql
     updatedAt: DateTime!
   }
 
+  enum TransactionType {
+    INCOME
+    EXPENSE
+  }
+
+  type Transaction {
+    id: ID!
+    description: String!
+    amount: Float!
+    type: TransactionType!
+    date: DateTime!
+    category: Category!
+    user: User!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
   type Query {
     categories: [Category]
+    transactions: [Transaction]
     me: User
   }
 
@@ -84,6 +117,7 @@ const typeDefs = `#graphql
     createCategory(title: String!, description: String, color: String!, icon: String!): Category!
     updateCategory(id: String!, title: String, description: String, color: String, icon: String): Category!
     deleteCategory(id: String!): Boolean!
+    createTransaction(description: String!, amount: Float!, type: TransactionType!, date: DateTime!, categoryId: String!): Transaction!
   }
 `;
 
@@ -95,6 +129,18 @@ const resolvers = {
       });
     },
   },
+  Transaction: {
+    user: async (parent: TransactionParent) => {
+      return prisma.user.findUnique({
+        where: { id: parent.userId },
+      });
+    },
+    category: async (parent: TransactionParent) => {
+      return prisma.category.findUnique({
+        where: { id: parent.categoryId },
+      });
+    },
+  },
   Query: {
     categories: async (_parent: unknown, _args: unknown, context: Context) => {
       if (!context.userId) {
@@ -103,6 +149,20 @@ const resolvers = {
       return prisma.category.findMany({
         where: { userId: context.userId },
         orderBy: { createdAt: "desc" },
+      });
+    },
+    transactions: async (
+      _parent: unknown,
+      _args: unknown,
+      context: Context,
+    ) => {
+      if (!context.userId) {
+        throw new Error("Not authenticated");
+      }
+
+      return prisma.transaction.findMany({
+        where: { userId: context.userId },
+        orderBy: { date: "desc" },
       });
     },
     me: async (_parent: unknown, _args: unknown, context: Context) => {
@@ -230,6 +290,44 @@ const resolvers = {
       });
 
       return true;
+    },
+    createTransaction: async (
+      _parent: unknown,
+      args: CreateTransactionArgs,
+      context: Context,
+    ) => {
+      if (!context.userId) {
+        throw new Error("Not authenticated");
+      }
+
+      const category = await prisma.category.findUnique({
+        where: { id: args.categoryId },
+      });
+
+      if (!category) {
+        throw new Error("Category not found");
+      }
+
+      if (category.userId !== context.userId) {
+        throw new Error("You are not authorized to use this category");
+      }
+
+      const parsedDate = new Date(args.date);
+
+      if (Number.isNaN(parsedDate.getTime())) {
+        throw new Error("Invalid date");
+      }
+
+      return prisma.transaction.create({
+        data: {
+          description: args.description,
+          amount: args.amount,
+          type: args.type,
+          date: parsedDate,
+          categoryId: args.categoryId,
+          userId: context.userId,
+        },
+      });
     },
   },
 };

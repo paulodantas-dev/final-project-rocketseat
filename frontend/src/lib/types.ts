@@ -47,3 +47,26 @@ export interface UpdateCategoryInput {
   color?: string;
   icon?: string;
 }
+
+export type TransactionType = "INCOME" | "EXPENSE";
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  type: TransactionType;
+  date: string;
+  categoryId: string;
+  createdAt: string;
+  updatedAt: string;
+  category: Category;
+  user?: User;
+}
+
+export interface CreateTransactionInput {
+  description: string;
+  amount: number;
+  type: TransactionType;
+  date: string;
+  categoryId: string;
+}
