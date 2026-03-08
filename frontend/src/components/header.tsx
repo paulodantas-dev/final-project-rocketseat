@@ -1,11 +1,15 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useMe } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/utils/get-initials";
 
 export function Header() {
   const matchRoute = useMatchRoute();
+  const { data: me } = useMe();
 
   const isActive = (path: string) => matchRoute({ to: path });
+  const initials = getInitials(me?.name ?? "");
 
   const getLinkClassName = (active: boolean) =>
     cn(
@@ -49,7 +53,7 @@ export function Header() {
             className="hover:opacity-80 transition-opacity cursor-pointer"
           >
             <AvatarFallback className="bg-gray-100 text-gray-700">
-              U
+              {initials}
             </AvatarFallback>
           </Avatar>
         </Link>

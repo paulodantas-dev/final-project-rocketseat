@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { SquarePen, Tag, Trash } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/use-categories";
+import { CategoryIcon } from "@/components/category-icon";
+import { CategoryBadge } from "@/components/category-badge";
+import { ActionButton } from "@/components/action-button";
 import { iconOptions } from "@/utils/icon-options";
 import { colorOptions } from "@/utils/color-options";
 import { DeleteCategoryModal } from "@/components/delete-category-modal";
@@ -55,37 +57,30 @@ export function CategoriesList() {
               className="flex flex-col gap-6 rounded-3xl border border-gray-200 bg-neutral-white p-6"
             >
               <div className="flex items-start justify-between gap-4">
-                <div
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-md",
-                    categoryColor.lightBgClassName,
-                    categoryColor.textClassName,
-                  )}
-                >
-                  <Icon size={16} />
-                </div>
+                <CategoryIcon
+                  icon={Icon}
+                  lightBgClassName={categoryColor.lightBgClassName}
+                  textClassName={categoryColor.textClassName}
+                />
 
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="cursor-pointer flex size-8 items-center justify-center rounded-md border border-gray-300 bg-neutral-white text-red-base transition-colors hover:bg-gray-100"
+                  <ActionButton
+                    color="danger"
                     onClick={() => {
                       setCategoryToDelete(category);
                       setIsDeleteModalOpen(true);
                     }}
                   >
                     <Trash size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="cursor-pointer flex size-8 items-center justify-center rounded-md border border-gray-300 bg-neutral-white text-gray-600 transition-colors hover:bg-gray-100"
+                  </ActionButton>
+                  <ActionButton
                     onClick={() => {
                       setCategoryToEdit(category);
                       setIsEditModalOpen(true);
                     }}
                   >
                     <SquarePen size={16} />
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
 
@@ -99,15 +94,12 @@ export function CategoriesList() {
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <span
-                  className={cn(
-                    "inline-flex rounded-full px-3 py-1 text-sm/snug font-medium capitalize",
-                    categoryColor.lightBgClassName,
-                    categoryColor.textClassName,
-                  )}
+                <CategoryBadge
+                  lightBgClassName={categoryColor.lightBgClassName}
+                  textClassName={categoryColor.textClassName}
                 >
                   {category.title}
-                </span>
+                </CategoryBadge>
 
                 <span className="text-sm/snug text-gray-600">
                   {totalItems} {totalItems === 1 ? "item" : "itens"}

@@ -1,99 +1,28 @@
-import { InfoIcon, Plus } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { ArrowDownCircle, ArrowUpCircle, Plus, Tag } from "lucide-react";
+import { CategoryBadge } from "@/components/category-badge";
+import { CategoryIcon } from "@/components/category-icon";
 import { SectionCard } from "@/components/section-card";
-
-interface Transaction {
-  id: string;
-  title: string;
-  date: string;
-  category: {
-    name: string;
-    icon: React.ReactNode;
-    color: "success" | "info" | "warning" | "danger";
-  };
-  amount: string;
-  type: "income" | "expense";
-  info?: React.ReactNode;
-}
+import { useTransactions } from "@/hooks/use-transactions";
+import { cn } from "@/lib/utils";
+import { colorOptions } from "@/utils/color-options";
+import { iconOptions } from "@/utils/icon-options";
+import { formatCurrency } from "@/utils/format-currency";
 
 interface RecentTransactionsProps {
-  transactions?: Transaction[];
   onViewAll?: () => void;
   onAddTransaction?: () => void;
 }
 
-const defaultTransactions: Transaction[] = [
-  {
-    id: "1",
-    title: "Pagamento de Salário",
-    date: "01/12/25",
-    category: {
-      name: "Receita",
-      icon: null,
-      color: "success",
-    },
-    amount: "+ R$ 4.250,00",
-    type: "income",
-    info: <InfoIcon size={16} />,
-  },
-  {
-    id: "2",
-    title: "Jantar no Restaurante",
-    date: "30/11/25",
-    category: {
-      name: "Alimentação",
-      icon: null,
-      color: "info",
-    },
-    amount: "- R$ 89,50",
-    type: "expense",
-    info: <InfoIcon size={16} />,
-  },
-  {
-    id: "3",
-    title: "Posto de Gasolina",
-    date: "29/11/25",
-    category: {
-      name: "Transporte",
-      icon: null,
-      color: "warning",
-    },
-    amount: "- R$ 100,00",
-    type: "expense",
-    info: <InfoIcon size={16} />,
-  },
-  {
-    id: "4",
-    title: "Compras no Mercado",
-    date: "28/11/25",
-    category: {
-      name: "Mercado",
-      icon: null,
-      color: "warning",
-    },
-    amount: "- R$ 156,80",
-    type: "expense",
-    info: <InfoIcon size={16} />,
-  },
-  {
-    id: "5",
-    title: "Retorno de Investimento",
-    date: "26/11/25",
-    category: {
-      name: "Investimento",
-      icon: null,
-      color: "success",
-    },
-    amount: "+ R$ 340,25",
-    type: "income",
-    info: <InfoIcon size={16} />,
-  },
-];
-
 export function RecentTransactions({
-  transactions = defaultTransactions,
   onViewAll,
   onAddTransaction,
 }: RecentTransactionsProps) {
+  const { data: fetchedTransactions = [], isLoading } = useTransactions();
+
+  const visibleTransactions = fetchedTransactions.slice(0, 5);
+
   return (
     <SectionCard.Root>
       <SectionCard.Header
@@ -102,35 +31,69 @@ export function RecentTransactions({
         onActionClick={onViewAll}
       />
       <SectionCard.Body>
-        {transactions.map((transaction) => (
-          <SectionCard.Item key={transaction.id}>
-            <SectionCard.ItemIcon>
-              <div className="flex size-10 items-center justify-center rounded-lg bg-blue-light text-blue-base">
-                {/* Ícone dinâmico aqui */}
-                <span className="text-lg">💳</span>
-              </div>
-            </SectionCard.ItemIcon>
-            <SectionCard.ItemContent>
-              <SectionCard.ItemTitle>{transaction.title}</SectionCard.ItemTitle>
-              <SectionCard.ItemSubtitle>
-                {transaction.date}
-              </SectionCard.ItemSubtitle>
-            </SectionCard.ItemContent>
-            <SectionCard.Badge variant={transaction.category.color}>
-              {transaction.category.name}
-            </SectionCard.Badge>
-            <SectionCard.ItemValue>
-              <span className="text-sm font-medium text-gray-800">
-                {transaction.amount}
-              </span>
-              {transaction.info && (
-                <SectionCard.ItemButton>
-                  {transaction.info}
-                </SectionCard.ItemButton>
-              )}
-            </SectionCard.ItemValue>
-          </SectionCard.Item>
-        ))}
+        {isLoading ? (
+          <p className="text-sm text-gray-500">Carregando transações...</p>
+        ) : visibleTransactions.length ? (
+          visibleTransactions.map((transaction) => {
+            const category = transaction.category;
+            const CategoryLucideIcon =
+              iconOptions.find((item) => item.value === category?.icon)?.Icon ||
+              Tag;
+            const categoryColor = colorOptions.find(
+              (item) => item.value === category?.color,
+            );
+            const isExpense = transaction.type === "EXPENSE";
+            const TransactionTypeIcon = isExpense
+              ? ArrowDownCircle
+              : ArrowUpCircle;
+
+            return (
+              <SectionCard.Item key={transaction.id}>
+                <SectionCard.ItemIcon>
+                  <CategoryIcon
+                    icon={CategoryLucideIcon}
+                    lightBgClassName={categoryColor?.lightBgClassName}
+                    textClassName={categoryColor?.textClassName}
+                  />
+                </SectionCard.ItemIcon>
+
+                <SectionCard.ItemContent>
+                  <SectionCard.ItemTitle>
+                    {transaction.description}
+                  </SectionCard.ItemTitle>
+                  <SectionCard.ItemSubtitle>
+                    {format(new Date(transaction.date), "dd/MM/yy", {
+                      locale: ptBR,
+                    })}
+                  </SectionCard.ItemSubtitle>
+                </SectionCard.ItemContent>
+
+                <CategoryBadge
+                  lightBgClassName={categoryColor?.lightBgClassName}
+                  textClassName={categoryColor?.textClassName}
+                  className="px-3 py-1 text-xs"
+                >
+                  {category?.title ?? "Sem categoria"}
+                </CategoryBadge>
+
+                <SectionCard.ItemValue>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {isExpense ? "- " : "+ "}
+                    {formatCurrency(transaction.amount)}
+                  </span>
+                  <TransactionTypeIcon
+                    size={14}
+                    className={cn(
+                      isExpense ? "text-red-base" : "text-feedback-success",
+                    )}
+                  />
+                </SectionCard.ItemValue>
+              </SectionCard.Item>
+            );
+          })
+        ) : (
+          <p className="text-sm text-gray-500">Nenhuma transação registrada.</p>
+        )}
       </SectionCard.Body>
       <SectionCard.Footer>
         <button

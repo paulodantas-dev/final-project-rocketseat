@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { graphqlClient } from "../lib/graphql-client";
-import type { AuthPayload, LoginInput, SignupInput, User } from "../lib/types";
+import type {
+  AuthPayload,
+  LoginInput,
+  SignupInput,
+  UpdateProfileInput,
+  User,
+} from "../lib/types";
 import { gql } from "graphql-request";
 
 const SIGNUP_MUTATION = gql`
@@ -36,6 +42,18 @@ const LOGIN_MUTATION = gql`
 const ME_QUERY = gql`
   query Me {
     me {
+      id
+      email
+      name
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const UPDATE_PROFILE_MUTATION = gql`
+  mutation UpdateProfile($name: String!) {
+    updateProfile(name: $name) {
       id
       email
       name
@@ -90,6 +108,24 @@ export function useMe() {
     },
     enabled: !!localStorage.getItem("token"),
     retry: false,
+  });
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateProfileInput) => {
+      const data = await graphqlClient.request<{ updateProfile: User }>(
+        UPDATE_PROFILE_MUTATION,
+        input,
+      );
+
+      return data.updateProfile;
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["me"], updatedUser);
+    },
   });
 }
 

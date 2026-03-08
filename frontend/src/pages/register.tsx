@@ -1,14 +1,53 @@
 import { InputLabel } from "@/components/input-label";
 import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
-import { Eye, EyeOff, Lock, LogIn, Mail, User } from "lucide-react";
-import { useState } from "react";
+import { useSignup } from "@/hooks/use-auth";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Eye, EyeOff, Loader2, Lock, LogIn, Mail, User } from "lucide-react";
+import { useState, type SubmitEvent } from "react";
 
 export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const signup = useSignup();
+  const navigate = useNavigate();
 
   const handleTogglePassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handleRegister = async (event: SubmitEvent) => {
+    event.preventDefault();
+    setFormError(null);
+
+    const form = event.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const name = (formData.get("name") as string).trim();
+    const email = (formData.get("email") as string).trim();
+    const password = (formData.get("password") as string).trim();
+
+    if (!name || !email || !password) {
+      setFormError("Preencha todos os campos.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setFormError("A senha deve ter no mínimo 8 caracteres.");
+      return;
+    }
+
+    try {
+      await signup.mutateAsync({
+        name,
+        email,
+        password,
+      });
+
+      navigate({ to: "/" });
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setFormError("Não foi possível criar a conta. Tente novamente.");
+    }
   };
 
   return (
@@ -23,7 +62,7 @@ export function RegisterPage() {
             Comece a controlar suas finanças ainda hoje
           </span>
         </div>
-        <div className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleRegister}>
           <InputLabel.Root>
             <InputLabel.Label
               htmlFor="name"
@@ -34,8 +73,10 @@ export function RegisterPage() {
             <InputLabel.Field
               id="name"
               type="text"
+              name="name"
               placeholder="Seu nome completo"
               startIcon={<User size={16} />}
+              disabled={signup.isPending}
             />
           </InputLabel.Root>
           <InputLabel.Root>
@@ -48,8 +89,10 @@ export function RegisterPage() {
             <InputLabel.Field
               id="email"
               type="email"
+              name="email"
               placeholder="mail@exemplo.com"
               startIcon={<Mail size={16} />}
+              disabled={signup.isPending}
             />
           </InputLabel.Root>
           <InputLabel.Root>
@@ -62,6 +105,7 @@ export function RegisterPage() {
             <InputLabel.Field
               id="password"
               type={showPassword ? "text" : "password"}
+              name="password"
               placeholder="Digite sua senha"
               startIcon={<Lock size={16} />}
               endIcon={showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -69,14 +113,28 @@ export function RegisterPage() {
               endIconAriaLabel={
                 showPassword ? "Ocultar senha" : "Mostrar senha"
               }
+              disabled={signup.isPending}
             />
             <span className="text-xs text-gray-500">
               A senha deve ter no mínimo 8 caracteres
             </span>
           </InputLabel.Root>
+
+          {formError ? (
+            <p className="text-sm text-red-base">{formError}</p>
+          ) : null}
+
           <div className="flex flex-col gap-6">
-            <Button className="w-full bg-brand-base hover:bg-brand-base/90 text-neutral-white h-12">
-              Cadastrar
+            <Button
+              type="submit"
+              className="w-full bg-brand-base hover:bg-brand-base/90 text-neutral-white h-12"
+              disabled={signup.isPending}
+            >
+              {signup.isPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Cadastrar"
+              )}
             </Button>
             <div className="relative flex items-center">
               <div className="grow border-t border-gray-300" />
@@ -89,6 +147,7 @@ export function RegisterPage() {
                 asChild
                 variant="outline"
                 className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 h-12 gap-2"
+                disabled={signup.isPending}
               >
                 <Link to="/login">
                   <LogIn size={16} />
@@ -97,7 +156,7 @@ export function RegisterPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

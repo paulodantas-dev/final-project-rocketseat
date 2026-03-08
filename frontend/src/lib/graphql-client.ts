@@ -1,6 +1,6 @@
 import { GraphQLClient } from "graphql-request";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3333";
+const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3333";
 
 export const graphqlClient = new GraphQLClient(API_URL, {
   headers: (): Record<string, string> => {

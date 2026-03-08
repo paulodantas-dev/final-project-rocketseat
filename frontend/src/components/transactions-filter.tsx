@@ -39,7 +39,6 @@ export function TransactionsFilter({
       label: cat.title,
     })) || []),
   ];
-
   const handleSearchChange = (value: string) => {
     setSearch(value);
     onFilterChange?.({ search: value, type, categoryId, period });

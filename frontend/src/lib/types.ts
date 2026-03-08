@@ -33,6 +33,10 @@ export interface LoginInput {
   password: string;
 }
 
+export interface UpdateProfileInput {
+  name: string;
+}
+
 export interface CreateCategoryInput {
   title: string;
   description?: string;
@@ -64,6 +68,15 @@ export interface Transaction {
 }
 
 export interface CreateTransactionInput {
+  description: string;
+  amount: number;
+  type: TransactionType;
+  date: string;
+  categoryId: string;
+}
+
+export interface UpdateTransactionInput {
+  id: string;
   description: string;
   amount: number;
   type: TransactionType;
